@@ -17,6 +17,6 @@ public interface RobotService {
      * retrieves a list of robots
      * @return
      */
-    RobotDto listAllRobots() throws CommunicationException;
+    RobotDto listAllRobots();
 
 }

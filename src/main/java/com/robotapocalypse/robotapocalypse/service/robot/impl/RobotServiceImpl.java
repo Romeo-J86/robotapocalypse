@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.naming.CommunicationException;
 import java.util.Arrays;
@@ -29,20 +30,15 @@ import static java.util.Objects.isNull;
 @RequiredArgsConstructor
 public class RobotServiceImpl implements RobotService {
 
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
     @Override
-    public RobotDto listAllRobots() throws CommunicationException {
+    public RobotDto listAllRobots(){
 
-        ResponseEntity<Robot[]> robotsResponse = restTemplate.getForEntity(Constants.ROBOTS_URL, Robot[].class);
-
-        if(robotsResponse.getStatusCode() != HttpStatus.OK){
-            throw new CommunicationException("Could not reach the robot service");
-        }
-
-        Robot[] robotsArray = robotsResponse.getBody();
-        if(isNull(robotsArray))
-            throw new RobotNotFoundException("No Robots found");
-
+        Robot[] robotsArray = webClient.get()
+                .uri(Constants.ROBOTS_URL)
+                .retrieve()
+                .bodyToMono(Robot[].class)
+                .block();
 
         List<Robot> flyingRobots = Arrays.stream(robotsArray)
                 .filter(robot -> robot.getCategory().equalsIgnoreCase("Flying"))
