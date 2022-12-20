@@ -3,6 +3,7 @@ package com.robotapocalypse.robotapocalypse.service.inventory.impl;
 import com.robotapocalypse.robotapocalypse.domain.Inventory;
 import com.robotapocalypse.robotapocalypse.domain.Survivor;
 import com.robotapocalypse.robotapocalypse.errohandling.InventoryNotFoundException;
+import com.robotapocalypse.robotapocalypse.errohandling.InvalidRequestException;
 import com.robotapocalypse.robotapocalypse.errohandling.SurvivorNotFoundException;
 import com.robotapocalypse.robotapocalypse.persistence.InventoryRepository;
 import com.robotapocalypse.robotapocalypse.persistence.SurvivorRepository;
@@ -29,6 +30,29 @@ public class InventoryServiceImpl implements InventoryService {
     private final ModelMapper modelMapper;
     private final InventoryRepository inventoryRepository;
     private final SurvivorRepository survivorRepository;
+
+    @Override
+    public InventoryDto saveInventory(InventoryRequest inventoryRequest) {
+        Survivor survivor = survivorRepository.findById(inventoryRequest.getSurvivorId()).orElseThrow(
+                () -> new SurvivorNotFoundException(
+                        String.format("Survivor with id %s was not found", inventoryRequest.getSurvivorId())
+                )
+        );
+        if (inventoryRequest.getQuantity() < 0){
+            throw new InvalidRequestException(
+                    String.format("Quantity, %s, cannot be negative", inventoryRequest.getQuantity())
+            );
+        }
+
+        Inventory inventory = Inventory.builder()
+                .inventoryType(inventoryRequest.getInventoryType())
+                .quantity(inventoryRequest.getQuantity())
+                .survivor(survivor)
+                .activeStatus(true)
+                .build();
+
+        return convertInventoryToDto(inventoryRepository.save(inventory));
+    }
     @Override
     public List<InventoryDto> getInventoryBySurvivor(Long survivorId) {
         Survivor survivor = survivorRepository.findById(survivorId).orElseThrow(
@@ -44,23 +68,6 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public InventoryDto saveInventory(InventoryRequest inventoryRequest) {
-        Survivor survivor = survivorRepository.findById(inventoryRequest.getSurvivorId()).orElseThrow(
-                () -> new SurvivorNotFoundException(
-                        String.format("Survivor with id %s was not found", inventoryRequest.getSurvivorId())
-                )
-        );
-        Inventory inventory = Inventory.builder()
-                .inventoryType(inventoryRequest.getInventoryType())
-                .unitOfMeasure(inventoryRequest.getUnitOfMeasure())
-                .quantity(inventoryRequest.getQuantity())
-                .survivor(survivor)
-                .activeStatus(true)
-                .build();
-        return convertInventoryToDto(inventoryRepository.save(inventory));
-    }
-
-    @Override
     public InventoryDto updateInventory(Long inventoryId, InventoryRequest inventoryRequest) {
         Inventory inventory = inventoryRepository.findById(inventoryId).orElseThrow(
                 () -> new InventoryNotFoundException(
@@ -68,7 +75,6 @@ public class InventoryServiceImpl implements InventoryService {
                 )
         );
         inventory.setInventoryType(inventoryRequest.getInventoryType());
-        inventory.setUnitOfMeasure(inventoryRequest.getUnitOfMeasure());
         inventory.setQuantity(inventoryRequest.getQuantity());
         inventory.setActiveStatus(inventoryRequest.isActiveStatus());
         return convertInventoryToDto(inventoryRepository.save(inventory));

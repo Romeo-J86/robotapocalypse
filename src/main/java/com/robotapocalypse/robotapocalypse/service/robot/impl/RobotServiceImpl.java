@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
+
 /**
  * @author Romeo Jerenyama
  * @created 16/12/2022 - 10:10
@@ -38,7 +40,7 @@ public class RobotServiceImpl implements RobotService {
         }
 
         Robot[] robotsArray = robotsResponse.getBody();
-        if(Objects.isNull(robotsArray))
+        if(isNull(robotsArray))
             throw new RobotNotFoundException("No Robots found");
 
 

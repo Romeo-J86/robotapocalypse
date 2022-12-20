@@ -1,7 +1,6 @@
 package com.robotapocalypse.robotapocalypse.domain;
 
 import com.robotapocalypse.robotapocalypse.util.enums.InventoryType;
-import com.robotapocalypse.robotapocalypse.util.enums.UnitOfMeasure;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,9 +25,6 @@ public class Inventory {
 
     @ManyToOne
     private Survivor survivor;
-    @Enumerated(EnumType.STRING)
-    private UnitOfMeasure unitOfMeasure;
-
     @Enumerated(EnumType.STRING)
     private InventoryType inventoryType;
 

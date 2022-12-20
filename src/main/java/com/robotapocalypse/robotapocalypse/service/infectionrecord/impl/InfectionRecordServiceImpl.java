@@ -15,7 +15,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+import static com.robotapocalypse.robotapocalypse.util.enums.InfectionStatus.INFECTED;
+import static com.robotapocalypse.robotapocalypse.util.enums.InfectionStatus.NON_INFECTED;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -37,30 +41,32 @@ public class InfectionRecordServiceImpl implements InfectionRecordService {
         Survivor survivorReported = survivorRepository.findById(infectionRecordRequest.getSurvivorReportedId())
                  .orElseThrow(
                          () -> new SurvivorNotFoundException(
-                                 String.format("Survivor Being reported with id %s not found",infectionRecordRequest.getSurvivorReportedId())
+                                 format("Survivor being reported with id %s not found",
+                                         infectionRecordRequest.getSurvivorReportedId())
                          )
                  );
 
         Survivor reportedBy = survivorRepository.findById(infectionRecordRequest.getReportedById())
                 .orElseThrow(
-                        ()->new SurvivorNotFoundException(
-                                String.format("Survivor Reporting Infection with id %s not found",infectionRecordRequest.getReportedById())
+                        () -> new SurvivorNotFoundException(
+                                format("Survivor Reporting Infection with id %s not found",
+                                        infectionRecordRequest.getReportedById())
                         )
                 );
 
-        InfectionRecord infectionRecord = InfectionRecord
-                .builder()
+        InfectionRecord infectionRecord = InfectionRecord.builder()
                 .reportedById(reportedBy.getId())
                 .reportedBy(reportedBy.getFirstName())
                 .survivorReportedId(survivorReported.getId())
                 .survivorReported(survivorReported.getFirstName())
                 .dateReported(LocalDateTime.now())
                 .build();
-
-        survivorReported.setInfectionReportTracker(survivorReported.getInfectionReportTracker() + 1);
+        if (Objects.equals(survivorReported.getInfectionStatus(), NON_INFECTED)){
+            survivorReported.setInfectionReportTracker(survivorReported.getInfectionReportTracker() + 1);
+        }
 
         if (survivorReported.getInfectionReportTracker() == 3) {
-            survivorReported.setInfectionStatus(InfectionStatus.INFECTED);
+            survivorReported.setInfectionStatus(INFECTED);
         }
 
         survivorRepository.save(survivorReported);

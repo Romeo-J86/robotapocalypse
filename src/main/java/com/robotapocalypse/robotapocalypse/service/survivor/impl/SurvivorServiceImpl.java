@@ -1,11 +1,11 @@
 package com.robotapocalypse.robotapocalypse.service.survivor.impl;
 
-import com.robotapocalypse.robotapocalypse.errohandling.InvalidRequestException;
-import com.robotapocalypse.robotapocalypse.service.survivor.SurvivorDto;
-import com.robotapocalypse.robotapocalypse.domain.embeddables.Location;
 import com.robotapocalypse.robotapocalypse.domain.Survivor;
+import com.robotapocalypse.robotapocalypse.domain.embeddables.Location;
+import com.robotapocalypse.robotapocalypse.errohandling.InvalidRequestException;
 import com.robotapocalypse.robotapocalypse.errohandling.SurvivorNotFoundException;
 import com.robotapocalypse.robotapocalypse.persistence.SurvivorRepository;
+import com.robotapocalypse.robotapocalypse.service.survivor.SurvivorDto;
 import com.robotapocalypse.robotapocalypse.service.survivor.SurvivorSaveRequest;
 import com.robotapocalypse.robotapocalypse.service.survivor.SurvivorService;
 import com.robotapocalypse.robotapocalypse.util.enums.Gender;
@@ -15,13 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.security.InvalidParameterException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.lang.Double.valueOf;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -37,8 +37,13 @@ public class SurvivorServiceImpl implements SurvivorService {
     private final ModelMapper modelMapper;
     @Override
     public SurvivorDto saveSurvivor(SurvivorSaveRequest survivorSaveRequest) {
-        if(Objects.isNull(survivorSaveRequest)) {
+        if(isNull(survivorSaveRequest)) {
             throw new InvalidRequestException("Survivor request cannot be null");
+        }
+        if (survivorSaveRequest.getAge() < 0){
+            throw new InvalidRequestException(
+                    String.format("Survivor age %s cannot be negative", survivorSaveRequest.getAge())
+            );
         }
         log.info("Adding survivor, survivorSaveRequest = {}",survivorSaveRequest);
         Survivor survivor = Survivor.builder()
@@ -51,8 +56,7 @@ public class SurvivorServiceImpl implements SurvivorService {
                 .dateCreated(LocalDate.now())
                 .infectionReportTracker(Integer.valueOf(0))
                 .build();
-        Survivor savedSurvivor = survivorRepository.save(survivor);
-        return convertSurvivorToDto(savedSurvivor);
+        return convertSurvivorToDto(survivorRepository.save(survivor));
     }
 
     @Override
@@ -68,8 +72,7 @@ public class SurvivorServiceImpl implements SurvivorService {
 
     @Override
     public List<SurvivorDto> getSurvivorsByInfectionStatus(InfectionStatus infectionStatus) {
-
-
+        requireNonNull(infectionStatus, "InfectionStatus cannot be null");
         List<Survivor> survivors = survivorRepository
                 .getSurvivorsByInfectionStatus(infectionStatus)
                 .orElseThrow(
@@ -84,15 +87,14 @@ public class SurvivorServiceImpl implements SurvivorService {
 
     @Override
     public Double getInfectedOrNonInfectedPercentage(InfectionStatus infectedStatus) {
-
+        requireNonNull(infectedStatus, "InfectionStatus cannot be null");
         Long countByInfectionStatus = survivorRepository.countByInfectionStatus(infectedStatus);
 
         Long allSurvivorsCount = survivorRepository.count();
 
         log.info("Survivors Count: {}",allSurvivorsCount);
 
-        //calculate the percentage by infection status
-        return  Double.valueOf(countByInfectionStatus / allSurvivorsCount * 100);
+        return  valueOf((countByInfectionStatus / allSurvivorsCount) * 100);
 
     }
 

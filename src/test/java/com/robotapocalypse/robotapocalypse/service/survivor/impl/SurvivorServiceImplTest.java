@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.robotapocalypse.robotapocalypse.util.enums.Gender.FEMALE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -41,10 +42,17 @@ class SurvivorServiceImplTest {
     @Mock
     private ModelMapper modelMapper;
     private SurvivorService underTest;
+    private Survivor survivor;
 
 
     @BeforeEach
     void setUp() {
+        survivor = Survivor.builder()
+                .id(1L)
+                .firstName("Albert")
+                .lastName("Einstein")
+                .location(new Location())
+                .build();
         underTest = new SurvivorServiceImpl(survivorRepository, modelMapper);
     }
 
@@ -54,7 +62,7 @@ class SurvivorServiceImplTest {
         //GIVEN
         SurvivorSaveRequest survivorSaveRequest = new SurvivorSaveRequest();
         survivorSaveRequest.setAge(18);
-        survivorSaveRequest.setGender(Gender.FEMALE.name());
+        survivorSaveRequest.setGender(FEMALE.name());
         survivorSaveRequest.setFirstName("Lissa");
         survivorSaveRequest.setLastName("Nadim");
         survivorSaveRequest.setLocation(new Location());
@@ -83,6 +91,25 @@ class SurvivorServiceImplTest {
 
         assertThat(capturedSurvivor).isEqualTo(expectedSurvivor);
     }
+    @Test
+    @DisplayName("given a negative value for age InvalidRequestException is thrown")
+    void saveSurvivorThrowsInvalidRequestExceptionWhenGivenNegativeValueForAge(){
+        int age = -23;
+
+        SurvivorSaveRequest survivorSaveRequest = new SurvivorSaveRequest();
+        survivorSaveRequest.setAge(age);
+        survivorSaveRequest.setGender(Gender.FEMALE.name());
+        survivorSaveRequest.setFirstName("Lissa");
+        survivorSaveRequest.setLastName("Nadim");
+        survivorSaveRequest.setLocation(new Location());
+
+        //WHEN
+        //THEN
+        assertThatThrownBy(() -> underTest.saveSurvivor(survivorSaveRequest))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessageContaining("Survivor age %s cannot be negative", survivorSaveRequest.getAge());
+
+    }
 
     @Test
     @DisplayName("Save Survivor Method Throws Invalid Request Exception When Passed Null Request")
@@ -102,12 +129,6 @@ class SurvivorServiceImplTest {
     @DisplayName("can update Location method update survivor location")
     void canUpdateLocation() {
         //GIVEN
-        Survivor survivor = Survivor.builder()
-                .id(1L)
-                .firstName("Albert")
-                .lastName("Einstein")
-                .location(new Location())
-                .build();
 
         Location location = new Location();
         location.setLatitude(-17.840050);
@@ -185,23 +206,15 @@ class SurvivorServiceImplTest {
         InfectionStatus infectionStatus = InfectionStatus.INFECTED;
         List<Survivor> survivors = new ArrayList<>();
 
-        Survivor survivor1 = Survivor.builder()
-                .id(1L)
-                .firstName("Albert")
-                .lastName("Einstein")
-                .location(new Location())
-                .infectionStatus(InfectionStatus.INFECTED)
-                .build();
         Survivor survivor2 = Survivor.builder()
                 .id(1L)
-                .firstName("Petronella")
-                .lastName("Makotore")
+                .firstName("Lionel")
+                .lastName("Samvura")
                 .location(new Location())
                 .infectionStatus(InfectionStatus.INFECTED)
                 .build();
-        survivors.add(survivor1);
+        survivors.add(survivor);
         survivors.add(survivor2);
-
 
         given(survivorRepository.getSurvivorsByInfectionStatus(infectionStatus))
                 .willReturn(Optional.ofNullable(survivors));
@@ -230,6 +243,6 @@ class SurvivorServiceImplTest {
 
         //THEN
         Double expectedResult = Double.valueOf(50 / 100 * 100);
-        assertThat(result==expectedResult);
+        assertThat(result == expectedResult);
     }
 }

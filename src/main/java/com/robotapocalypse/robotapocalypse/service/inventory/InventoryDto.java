@@ -1,7 +1,6 @@
 package com.robotapocalypse.robotapocalypse.service.inventory;
 
 import com.robotapocalypse.robotapocalypse.util.enums.InventoryType;
-import com.robotapocalypse.robotapocalypse.util.enums.UnitOfMeasure;
 import lombok.Data;
 
 /**
@@ -13,8 +12,11 @@ public class InventoryDto {
 
     private Long id;
     private Long survivorId;
-    private UnitOfMeasure unitOfMeasure;
     private InventoryType inventoryType;
     private long quantity;
     private boolean activeStatus;
+
+    public String getQuantity(){
+        return quantity + inventoryType.getUnitOfMeasure();
+    }
 }
