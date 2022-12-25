@@ -1,25 +1,18 @@
 package com.robotapocalypse.robotapocalypse.service.robot.impl;
 
-import com.robotapocalypse.robotapocalypse.errohandling.RobotNotFoundException;
 import com.robotapocalypse.robotapocalypse.service.robot.Robot;
 import com.robotapocalypse.robotapocalypse.service.robot.RobotDto;
 import com.robotapocalypse.robotapocalypse.service.robot.RobotService;
-import com.robotapocalypse.robotapocalypse.util.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import javax.naming.CommunicationException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.isNull;
+import static com.robotapocalypse.robotapocalypse.util.Constants.ROBOTS_URL;
 
 /**
  * @author Romeo Jerenyama
@@ -35,7 +28,7 @@ public class RobotServiceImpl implements RobotService {
     public RobotDto listAllRobots(){
 
         Robot[] robotsArray = webClient.get()
-                .uri(Constants.ROBOTS_URL)
+                .uri(ROBOTS_URL)
                 .retrieve()
                 .bodyToMono(Robot[].class)
                 .block();
